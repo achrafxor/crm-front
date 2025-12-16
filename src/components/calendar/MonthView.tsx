@@ -1,7 +1,6 @@
 import React from 'react';
-import { Box, Typography, Grid, Paper } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import type { CalendarTask } from '../../types';
-import DayCell from './DayCell';
 
 interface MonthViewProps {
     year: number;
@@ -17,41 +16,34 @@ const MonthView: React.FC<MonthViewProps> = ({
     month,
     tasks,
     onDateClick,
-    onTimeSlotClick,
     onTaskClick,
 }) => {
-    // Create date objects with proper timezone handling
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
     const daysInMonth = lastDay.getDate();
-    // getDay() returns 0 (Sunday) to 6 (Saturday)
     const startingDayOfWeek = firstDay.getDay();
 
-    const weekDays = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
-    const weekDaysShort = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
+    const weekDays = ['LUN', 'MAR', 'MER', 'JEU', 'VEN', 'SAM', 'DIM'];
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
-    // Build calendar grid: 7 columns (one for each day of week)
-    // Each row represents a week
     const weeks: (number | null)[][] = [];
-
-    // Start with empty cells for days before the first day of the month
     let currentWeek: (number | null)[] = [];
-    for (let i = 0; i < startingDayOfWeek; i++) {
+    
+    const adjustedStartDay = startingDayOfWeek === 0 ? 6 : startingDayOfWeek - 1;
+    
+    for (let i = 0; i < adjustedStartDay; i++) {
         currentWeek.push(null);
     }
 
-    // Add all days of the month
     for (let day = 1; day <= daysInMonth; day++) {
         currentWeek.push(day);
-
-        // When we reach 7 days, start a new week
         if (currentWeek.length === 7) {
             weeks.push(currentWeek);
             currentWeek = [];
         }
     }
 
-    // Add remaining empty cells for the last week if needed
     while (currentWeek.length < 7 && currentWeek.length > 0) {
         currentWeek.push(null);
     }
@@ -60,110 +52,176 @@ const MonthView: React.FC<MonthViewProps> = ({
     }
 
     const formatDate = (day: number): string => {
-        const date = new Date(year, month, day);
-        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+        return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     };
 
-    // Verify day of week for a given day
-    const getDayOfWeek = (day: number): number => {
-        const date = new Date(year, month, day);
-        return date.getDay();
+    const getTasksForDay = (day: number) => {
+        return tasks.filter(t => t.date === formatDate(day));
     };
 
     return (
-        <Box sx={{ width: '100%', mx: 0 }}>
-            {/* Week day headers - fixed width columns */}
-            <Grid container spacing={0.25} sx={{ mb: 0.5, width: '100%', mx: 0 }}>
-                {weekDays.map((dayName, index) => (
-                    <Grid
-                        item
-                        xs
-                        key={dayName}
+        <Box sx={{ width: '100%' }}>
+            {/* Day Headers */}
+            <Box sx={{ display: 'flex', borderBottom: '1px solid', borderColor: 'divider' }}>
+                {weekDays.map((day, index) => (
+                    <Box
+                        key={day}
                         sx={{
-                            textAlign: 'center',
+                            flex: 1,
                             py: 1.5,
-                            flex: '1 1 0%',
-                            minWidth: 0,
+                            textAlign: 'center',
+                            borderRight: index < 6 ? '1px solid' : 'none',
+                            borderColor: 'divider',
                         }}
                     >
                         <Typography
-                            variant="subtitle2"
-                            fontWeight="bold"
-                            color="text.secondary"
+                            variant="caption"
                             sx={{
-                                fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                                textTransform: 'uppercase',
-                                letterSpacing: 0.5,
+                                fontWeight: 600,
+                                fontSize: '0.75rem',
+                                color: index >= 5 ? '#e91e63' : 'text.secondary',
+                                letterSpacing: '0.5px',
                             }}
                         >
-                            {weekDaysShort[index]}
+                            {day}
                         </Typography>
-                    </Grid>
+                    </Box>
                 ))}
-            </Grid>
+            </Box>
 
-            {/* Calendar weeks - each week in a row with proper column alignment */}
+            {/* Calendar Grid */}
             {weeks.map((week, weekIndex) => (
-                <Grid
-                    container
-                    spacing={0.25}
+                <Box
                     key={weekIndex}
                     sx={{
-                        mb: 0.25,
-                        width: '100%',
-                        mx: 0,
-                        alignItems: 'stretch', // All cells in row have same height
+                        display: 'flex',
+                        minHeight: '120px',
+                        borderBottom: weekIndex < weeks.length - 1 ? '1px solid' : 'none',
+                        borderColor: 'divider',
                     }}
                 >
                     {week.map((day, dayIndex) => {
-                        // Verify this day is in the correct column
-                        let actualDayOfWeek: number | null = null;
-                        if (day !== null) {
-                            actualDayOfWeek = getDayOfWeek(day);
-                        }
+                        const dateStr = day ? formatDate(day) : '';
+                        const isToday = dateStr === todayStr;
+                        const dayTasks = day ? getTasksForDay(day) : [];
+                        const isWeekend = dayIndex >= 5;
 
                         return (
-                            <Grid
-                                item
-                                xs
+                            <Box
                                 key={`${weekIndex}-${dayIndex}`}
+                                onClick={() => day && onDateClick(dateStr)}
                                 sx={{
-                                    minHeight: '140px',
-                                    flex: '1 1 0%',
-                                    minWidth: 0,
-                                    display: 'flex',
+                                    flex: 1,
+                                    p: 1,
+                                    borderRight: dayIndex < 6 ? '1px solid' : 'none',
+                                    borderColor: 'divider',
+                                    bgcolor: day ? 'transparent' : '#fafafa',
+                                    cursor: day ? 'pointer' : 'default',
+                                    '&:hover': day ? { bgcolor: '#f5f5f5' } : {},
+                                    position: 'relative',
                                 }}
                             >
-                                {day !== null ? (
-                                    <DayCell
-                                        day={day}
-                                        date={formatDate(day)}
-                                        dayOfWeek={actualDayOfWeek}
-                                        tasks={tasks.filter(t => t.date === formatDate(day))}
-                                        onDateClick={onDateClick}
-                                        onTimeSlotClick={onTimeSlotClick}
-                                        onTaskClick={onTaskClick}
-                                    />
-                                ) : (
-                                    <Paper
-                                        sx={{
-                                            minHeight: '140px',
-                                            height: '100%',
-                                            width: '100%',
-                                            bgcolor: 'grey.50',
-                                            border: '1px solid',
-                                            borderColor: 'divider',
-                                        }}
-                                    />
+                                {day && (
+                                    <>
+                                        <Box
+                                            sx={{
+                                                display: 'inline-flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                width: isToday ? 28 : 'auto',
+                                                height: isToday ? 28 : 'auto',
+                                                borderRadius: '50%',
+                                                bgcolor: isToday ? '#2196f3' : 'transparent',
+                                                color: isToday ? 'white' : isWeekend ? '#e91e63' : 'text.primary',
+                                                mb: 0.5,
+                                            }}
+                                        >
+                                            <Typography
+                                                variant="body2"
+                                                sx={{
+                                                    fontWeight: isToday ? 600 : 400,
+                                                    fontSize: '0.875rem',
+                                                }}
+                                            >
+                                                {day}
+                                            </Typography>
+                                        </Box>
+
+                                        {/* Tasks */}
+                                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                                            {dayTasks.slice(0, 3).map((task) => (
+                                                <Box
+                                                    key={task.id}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        onTaskClick(task);
+                                                    }}
+                                                    sx={{
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        gap: 0.5,
+                                                        fontSize: '0.7rem',
+                                                        color: task.color || '#2196f3',
+                                                        cursor: 'pointer',
+                                                        overflow: 'hidden',
+                                                        whiteSpace: 'nowrap',
+                                                        textOverflow: 'ellipsis',
+                                                        '&:hover': { textDecoration: 'underline' },
+                                                    }}
+                                                >
+                                                    <Box
+                                                        sx={{
+                                                            width: 6,
+                                                            height: 6,
+                                                            borderRadius: '50%',
+                                                            bgcolor: task.color || '#2196f3',
+                                                            flexShrink: 0,
+                                                        }}
+                                                    />
+                                                    <Typography
+                                                        variant="caption"
+                                                        sx={{
+                                                            fontSize: '0.7rem',
+                                                            overflow: 'hidden',
+                                                            textOverflow: 'ellipsis',
+                                                        }}
+                                                    >
+                                                        {task.title}
+                                                    </Typography>
+                                                    <Typography
+                                                        variant="caption"
+                                                        sx={{
+                                                            fontSize: '0.65rem',
+                                                            color: 'text.secondary',
+                                                            ml: 'auto',
+                                                        }}
+                                                    >
+                                                        {task.startTime}
+                                                    </Typography>
+                                                </Box>
+                                            ))}
+                                            {dayTasks.length > 3 && (
+                                                <Typography
+                                                    variant="caption"
+                                                    sx={{
+                                                        fontSize: '0.65rem',
+                                                        color: '#2196f3',
+                                                        cursor: 'pointer',
+                                                    }}
+                                                >
+                                                    +{dayTasks.length - 3} autres
+                                                </Typography>
+                                            )}
+                                        </Box>
+                                    </>
                                 )}
-                            </Grid>
+                            </Box>
                         );
                     })}
-                </Grid>
+                </Box>
             ))}
         </Box>
     );
 };
 
 export default MonthView;
-
