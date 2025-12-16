@@ -1,15 +1,16 @@
 import { useState, useEffect } from 'react';
 import {
     Box,
-    Card,
-    CardContent,
+    Paper,
     Typography,
     TextField,
     MenuItem,
     Button,
     Alert,
-    Stack
+    Stack,
+    Avatar,
 } from '@mui/material';
+import { TrendingUp, Flag } from '@mui/icons-material';
 import type { SeniorityLevel } from '../types';
 import { suggestSeniority, generateMonthlyGoals } from '../services/goalsService';
 import { useGoals } from '../context/GoalsContext';
@@ -33,9 +34,6 @@ const GoalSetup = () => {
         if (!isNaN(revVal) && revVal > 0) {
             const suggestion = suggestSeniority(revVal);
             setSuggested(suggestion);
-            // Auto-select seniority if not manually changed? 
-            // For now just show suggestion or auto-select if user hasn't intereacted?
-            // Let's just update the local state if it's the first time or simply suggest.
             setSeniority(suggestion);
         }
     }, [revenue]);
@@ -47,47 +45,93 @@ const GoalSetup = () => {
 
         const newGoal = generateMonthlyGoals(year, revVal, seniority);
         setGoal(newGoal);
-        navigate('/goals'); // Redirect to dashboard view
+        navigate('/goals');
     };
 
     return (
-        <Card sx={{ maxWidth: 600, mx: 'auto', mt: 4 }}>
-            <CardContent>
-                <Typography variant="h5" component="h2" gutterBottom>
-                    Setup Annual Goals
+        <Box sx={{ maxWidth: 600, mx: 'auto', mt: 4 }}>
+            <Box sx={{ textAlign: 'center', mb: 4 }}>
+                <Avatar
+                    sx={{
+                        bgcolor: '#3b82f6',
+                        width: 64,
+                        height: 64,
+                        mx: 'auto',
+                        mb: 2,
+                    }}
+                >
+                    <Flag sx={{ fontSize: 32 }} />
+                </Avatar>
+                <Typography
+                    variant="h4"
+                    sx={{
+                        fontWeight: 700,
+                        color: '#1e293b',
+                        mb: 1,
+                    }}
+                >
+                    Définir vos Objectifs
                 </Typography>
-                <Typography color="text.secondary" paragraph>
-                    Define your targets for the upcoming year to generate your monthly roadmap.
+                <Typography
+                    sx={{
+                        color: '#64748b',
+                        fontSize: '0.9375rem',
+                    }}
+                >
+                    Configurez vos objectifs annuels pour générer votre feuille de route mensuelle
                 </Typography>
+            </Box>
 
+            <Paper
+                sx={{
+                    p: 4,
+                    borderRadius: 3,
+                    border: '1px solid #e2e8f0',
+                }}
+            >
                 <form onSubmit={handleSubmit}>
                     <Stack spacing={3}>
                         <TextField
-                            label="Target Year"
+                            label="Année cible"
                             type="number"
                             value={year}
                             onChange={(e) => setYear(parseInt(e.target.value))}
                             fullWidth
                             required
+                            sx={{
+                                '& .MuiOutlinedInput-root': {
+                                    borderRadius: 2,
+                                },
+                            }}
                         />
 
                         <TextField
-                            label="Annual Revenue Target (TND/EUR)"
+                            label="Objectif de Revenu Annuel (EUR)"
                             type="number"
                             value={revenue}
                             onChange={(e) => setRevenue(e.target.value)}
                             fullWidth
                             required
-                            helperText={suggested ? `Suggested Level: ${suggested}` : 'Enter revenue to see suggestion'}
+                            helperText={suggested ? `Niveau suggéré: ${suggested}` : 'Entrez un montant pour voir la suggestion'}
+                            sx={{
+                                '& .MuiOutlinedInput-root': {
+                                    borderRadius: 2,
+                                },
+                            }}
                         />
 
                         <TextField
                             select
-                            label="Seniority Level"
+                            label="Niveau d'Expérience"
                             value={seniority}
                             onChange={(e) => setSeniority(e.target.value as SeniorityLevel)}
                             fullWidth
                             required
+                            sx={{
+                                '& .MuiOutlinedInput-root': {
+                                    borderRadius: 2,
+                                },
+                            }}
                         >
                             {SENIORITY_LEVELS.map((level) => (
                                 <MenuItem key={level} value={level}>
@@ -97,18 +141,44 @@ const GoalSetup = () => {
                         </TextField>
 
                         {suggested && suggested !== seniority && (
-                            <Alert severity="info">
-                                Based on your revenue, we recommend <strong>{suggested}</strong> level.
+                            <Alert 
+                                severity="info"
+                                sx={{
+                                    borderRadius: 2,
+                                    '& .MuiAlert-icon': {
+                                        alignItems: 'center',
+                                    },
+                                }}
+                            >
+                                Basé sur votre objectif de revenu, nous recommandons le niveau <strong>{suggested}</strong>.
                             </Alert>
                         )}
 
-                        <Button type="submit" variant="contained" size="large" fullWidth>
-                            Generate Goals
+                        <Button 
+                            type="submit" 
+                            variant="contained" 
+                            size="large" 
+                            fullWidth
+                            startIcon={<TrendingUp />}
+                            sx={{
+                                bgcolor: '#3b82f6',
+                                borderRadius: 2,
+                                py: 1.5,
+                                fontWeight: 600,
+                                textTransform: 'none',
+                                fontSize: '1rem',
+                                boxShadow: '0 4px 6px -1px rgba(59, 130, 246, 0.3)',
+                                '&:hover': {
+                                    bgcolor: '#2563eb',
+                                },
+                            }}
+                        >
+                            Générer les Objectifs
                         </Button>
                     </Stack>
                 </form>
-            </CardContent>
-        </Card>
+            </Paper>
+        </Box>
     );
 };
 
