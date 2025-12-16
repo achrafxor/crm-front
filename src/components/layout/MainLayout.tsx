@@ -10,6 +10,7 @@ import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import PersonIcon from '@mui/icons-material/Person';
 import ArticleIcon from '@mui/icons-material/Article';
+import BusinessCenterIcon from '@mui/icons-material/BusinessCenter';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 
@@ -18,10 +19,16 @@ const drawerWidth = 240;
 const MainLayout = () => {
     const navigate = useNavigate();
     const location = useLocation();
+    const [commercialOpen, setCommercialOpen] = useState(false);
     const [vendeurOpen, setVendeurOpen] = useState(false);
 
-    // Check if we're on a vendeur page to keep it expanded
+    // Check if we're on a commercial-related page to keep it expanded
     useEffect(() => {
+        if (location.pathname.startsWith('/vendeur') || 
+            location.pathname === '/contacts' || 
+            location.pathname.startsWith('/mandat')) {
+            setCommercialOpen(true);
+        }
         if (location.pathname.startsWith('/vendeur')) {
             setVendeurOpen(true);
         }
@@ -29,17 +36,22 @@ const MainLayout = () => {
 
     const menuItems = [
         { text: 'Dashboard', icon: <DashboardIcon />, path: '/' },
-        { text: 'Contacts', icon: <PeopleIcon />, path: '/contacts' },
         { text: 'Assistant', icon: <SearchIcon />, path: '/assistant' },
-        { text: 'Mandat', icon: <MonetizationOnIcon />, path: '/mandat' },
         { text: 'Goals', icon: <AssessmentIcon />, path: '/goals' },
         { text: 'Calendrier', icon: <CalendarTodayIcon />, path: '/calendar' },
     ];
+
+    const handleCommercialClick = () => {
+        setCommercialOpen(!commercialOpen);
+    };
 
     const handleVendeurClick = () => {
         setVendeurOpen(!vendeurOpen);
     };
 
+    const isCommercialActive = location.pathname === '/contacts' || 
+                               location.pathname.startsWith('/mandat') || 
+                               location.pathname.startsWith('/vendeur');
     const isVendeurActive = location.pathname.startsWith('/vendeur');
 
     return (
@@ -77,41 +89,77 @@ const MainLayout = () => {
                             </ListItem>
                         ))}
 
-                        {/* Vendeur avec sous-catégories */}
+                        {/* Commercial avec sous-catégories */}
                         <ListItem disablePadding>
                             <ListItemButton
-                                onClick={handleVendeurClick}
-                                selected={isVendeurActive}
+                                onClick={handleCommercialClick}
+                                selected={isCommercialActive}
                             >
                                 <ListItemIcon>
-                                    <SearchIcon />
+                                    <BusinessCenterIcon />
                                 </ListItemIcon>
-                                <ListItemText primary="Vendeur" />
-                                {vendeurOpen ? <ExpandLess /> : <ExpandMore />}
+                                <ListItemText primary="Commercial" />
+                                {commercialOpen ? <ExpandLess /> : <ExpandMore />}
                             </ListItemButton>
                         </ListItem>
-                        <Collapse in={vendeurOpen} timeout="auto" unmountOnExit>
+                        <Collapse in={commercialOpen} timeout="auto" unmountOnExit>
                             <List component="div" disablePadding>
                                 <ListItemButton
                                     sx={{ pl: 4 }}
-                                    onClick={() => navigate('/vendeur/personnes')}
-                                    selected={location.pathname === '/vendeur/personnes'}
+                                    onClick={() => navigate('/contacts')}
+                                    selected={location.pathname === '/contacts'}
                                 >
                                     <ListItemIcon>
-                                        <PersonIcon />
+                                        <PeopleIcon />
                                     </ListItemIcon>
-                                    <ListItemText primary="Gérer des Vendeurs" />
+                                    <ListItemText primary="Contacts" />
                                 </ListItemButton>
                                 <ListItemButton
                                     sx={{ pl: 4 }}
-                                    onClick={() => navigate('/vendeur/annonces')}
-                                    selected={location.pathname === '/vendeur/annonces'}
+                                    onClick={() => navigate('/mandat')}
+                                    selected={location.pathname.startsWith('/mandat')}
                                 >
                                     <ListItemIcon>
-                                        <ArticleIcon />
+                                        <MonetizationOnIcon />
                                     </ListItemIcon>
-                                    <ListItemText primary="Prospecter des Vendeurs" />
+                                    <ListItemText primary="Mandat" />
                                 </ListItemButton>
+                                {/* Vendeur avec sous-catégories */}
+                                <ListItemButton
+                                    sx={{ pl: 4 }}
+                                    onClick={handleVendeurClick}
+                                    selected={isVendeurActive}
+                                >
+                                    <ListItemIcon>
+                                        <SearchIcon />
+                                    </ListItemIcon>
+                                    <ListItemText primary="Vendeur" />
+                                    {vendeurOpen ? <ExpandLess /> : <ExpandMore />}
+                                </ListItemButton>
+                                <Collapse in={vendeurOpen} timeout="auto" unmountOnExit>
+                                    <List component="div" disablePadding>
+                                        <ListItemButton
+                                            sx={{ pl: 6 }}
+                                            onClick={() => navigate('/vendeur/personnes')}
+                                            selected={location.pathname === '/vendeur/personnes'}
+                                        >
+                                            <ListItemIcon>
+                                                <PersonIcon />
+                                            </ListItemIcon>
+                                            <ListItemText primary="Gérer des Vendeurs" />
+                                        </ListItemButton>
+                                        <ListItemButton
+                                            sx={{ pl: 6 }}
+                                            onClick={() => navigate('/vendeur/annonces')}
+                                            selected={location.pathname === '/vendeur/annonces'}
+                                        >
+                                            <ListItemIcon>
+                                                <ArticleIcon />
+                                            </ListItemIcon>
+                                            <ListItemText primary="Prospecter des Vendeurs" />
+                                        </ListItemButton>
+                                    </List>
+                                </Collapse>
                             </List>
                         </Collapse>
                     </List>
