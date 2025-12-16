@@ -11,6 +11,7 @@ import ExpandMore from '@mui/icons-material/ExpandMore';
 import PersonIcon from '@mui/icons-material/Person';
 import ArticleIcon from '@mui/icons-material/Article';
 import BusinessCenterIcon from '@mui/icons-material/BusinessCenter';
+import EventNoteIcon from '@mui/icons-material/EventNote';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 
@@ -20,6 +21,7 @@ const MainLayout = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const [commercialOpen, setCommercialOpen] = useState(false);
+    const [activitesOpen, setActivitesOpen] = useState(false);
     const [vendeurOpen, setVendeurOpen] = useState(false);
 
     // Check if we're on a commercial-related page to keep it expanded
@@ -29,6 +31,9 @@ const MainLayout = () => {
             location.pathname.startsWith('/mandat')) {
             setCommercialOpen(true);
         }
+        if (location.pathname === '/assistant' || location.pathname.startsWith('/calendar')) {
+            setActivitesOpen(true);
+        }
         if (location.pathname.startsWith('/vendeur')) {
             setVendeurOpen(true);
         }
@@ -36,13 +41,15 @@ const MainLayout = () => {
 
     const menuItems = [
         { text: 'Dashboard', icon: <DashboardIcon />, path: '/' },
-        { text: 'Assistant', icon: <SearchIcon />, path: '/assistant' },
         { text: 'Goals', icon: <AssessmentIcon />, path: '/goals' },
-        { text: 'Calendrier', icon: <CalendarTodayIcon />, path: '/calendar' },
     ];
 
     const handleCommercialClick = () => {
         setCommercialOpen(!commercialOpen);
+    };
+
+    const handleActivitesClick = () => {
+        setActivitesOpen(!activitesOpen);
     };
 
     const handleVendeurClick = () => {
@@ -52,6 +59,7 @@ const MainLayout = () => {
     const isCommercialActive = location.pathname === '/contacts' || 
                                location.pathname.startsWith('/mandat') || 
                                location.pathname.startsWith('/vendeur');
+    const isActivitesActive = location.pathname === '/assistant' || location.pathname.startsWith('/calendar');
     const isVendeurActive = location.pathname.startsWith('/vendeur');
 
     return (
@@ -88,6 +96,44 @@ const MainLayout = () => {
                                 </ListItemButton>
                             </ListItem>
                         ))}
+
+                        {/* Activités avec sous-catégories */}
+                        <ListItem disablePadding>
+                            <ListItemButton
+                                onClick={handleActivitesClick}
+                                selected={isActivitesActive}
+                            >
+                                <ListItemIcon>
+                                    <EventNoteIcon />
+                                </ListItemIcon>
+                                <ListItemText primary="Activités" />
+                                {activitesOpen ? <ExpandLess /> : <ExpandMore />}
+                            </ListItemButton>
+                        </ListItem>
+                        <Collapse in={activitesOpen} timeout="auto" unmountOnExit>
+                            <List component="div" disablePadding>
+                                <ListItemButton
+                                    sx={{ pl: 4 }}
+                                    onClick={() => navigate('/assistant')}
+                                    selected={location.pathname === '/assistant'}
+                                >
+                                    <ListItemIcon>
+                                        <SearchIcon />
+                                    </ListItemIcon>
+                                    <ListItemText primary="Assistant" />
+                                </ListItemButton>
+                                <ListItemButton
+                                    sx={{ pl: 4 }}
+                                    onClick={() => navigate('/calendar')}
+                                    selected={location.pathname.startsWith('/calendar')}
+                                >
+                                    <ListItemIcon>
+                                        <CalendarTodayIcon />
+                                    </ListItemIcon>
+                                    <ListItemText primary="Calendrier" />
+                                </ListItemButton>
+                            </List>
+                        </Collapse>
 
                         {/* Commercial avec sous-catégories */}
                         <ListItem disablePadding>

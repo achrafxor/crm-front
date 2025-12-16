@@ -1,14 +1,17 @@
 import React, { useState } from 'react';
-import { Typography, Box, Button, IconButton, Paper } from '@mui/material';
+import { Typography, Box, Button, IconButton, Paper, ToggleButton, ToggleButtonGroup } from '@mui/material';
 import { Add, ChevronLeft, ChevronRight } from '@mui/icons-material';
 import { useCalendar } from '../context/CalendarContext';
 import MonthView from '../components/calendar/MonthView';
+import WeekView from '../components/calendar/WeekView';
+import DayView from '../components/calendar/DayView';
 import TaskForm from '../components/calendar/TaskForm';
 import type { CalendarTask } from '../types';
 
 const Calendar = () => {
     const { tasks } = useCalendar();
     const [currentDate, setCurrentDate] = useState(new Date());
+    const [viewMode, setViewMode] = useState<'month' | 'week' | 'day'>('month');
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [selectedDate, setSelectedDate] = useState<string | null>(null);
     const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(null);
@@ -18,11 +21,23 @@ const Calendar = () => {
     const month = currentDate.getMonth();
 
     const handlePreviousMonth = () => {
-        setCurrentDate(new Date(year, month - 1, 1));
+        if (viewMode === 'month') {
+            setCurrentDate(new Date(year, month - 1, 1));
+        } else if (viewMode === 'week') {
+            setCurrentDate(new Date(currentDate.getTime() - 7 * 24 * 60 * 60 * 1000));
+        } else {
+            setCurrentDate(new Date(currentDate.getTime() - 24 * 60 * 60 * 1000));
+        }
     };
 
     const handleNextMonth = () => {
-        setCurrentDate(new Date(year, month + 1, 1));
+        if (viewMode === 'month') {
+            setCurrentDate(new Date(year, month + 1, 1));
+        } else if (viewMode === 'week') {
+            setCurrentDate(new Date(currentDate.getTime() + 7 * 24 * 60 * 60 * 1000));
+        } else {
+            setCurrentDate(new Date(currentDate.getTime() + 24 * 60 * 60 * 1000));
+        }
     };
 
     const handleDateClick = (date: string) => {
@@ -127,27 +142,59 @@ const Calendar = () => {
                 </Button>
             </Box>
 
+            {/* View mode selector */}
+            <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+                <ToggleButtonGroup
+                    value={viewMode}
+                    exclusive
+                    onChange={(e, newMode) => newMode && setViewMode(newMode)}
+                    sx={{ bgcolor: 'background.paper', boxShadow: 1 }}
+                >
+                    <ToggleButton value="month">Mois</ToggleButton>
+                    <ToggleButton value="week">Semaine</ToggleButton>
+                    <ToggleButton value="day">Jour</ToggleButton>
+                </ToggleButtonGroup>
+            </Box>
+
             {/* Calendar */}
             <Paper
                 elevation={2}
                 sx={{
-                    p: 1,
+                    p: 2,
                     borderRadius: 2,
                     bgcolor: 'background.paper',
                     width: '100%',
                     maxWidth: '100%',
-                    overflow: 'hidden',
+                    overflow: 'auto',
                 }}
             >
                 <Box sx={{ width: '100%' }}>
-                    <MonthView
-                        year={year}
-                        month={month}
-                        tasks={tasks}
-                        onDateClick={handleDateClick}
-                        onTimeSlotClick={handleTimeSlotClick}
-                        onTaskClick={handleTaskClick}
-                    />
+                    {viewMode === 'month' && (
+                        <MonthView
+                            year={year}
+                            month={month}
+                            tasks={tasks}
+                            onDateClick={handleDateClick}
+                            onTimeSlotClick={handleTimeSlotClick}
+                            onTaskClick={handleTaskClick}
+                        />
+                    )}
+                    {viewMode === 'week' && (
+                        <WeekView
+                            startDate={currentDate.toISOString().split('T')[0]}
+                            tasks={tasks}
+                            onTimeSlotClick={handleTimeSlotClick}
+                            onTaskClick={handleTaskClick}
+                        />
+                    )}
+                    {viewMode === 'day' && (
+                        <DayView
+                            date={currentDate.toISOString().split('T')[0]}
+                            tasks={tasks}
+                            onTimeSlotClick={handleTimeSlotClick}
+                            onTaskClick={handleTaskClick}
+                        />
+                    )}
                 </Box>
             </Paper>
 
